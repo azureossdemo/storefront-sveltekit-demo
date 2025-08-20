@@ -4,6 +4,13 @@ import type { UserConfig } from "vite";
 
 const config: UserConfig = {
 	plugins: [houdini(), sveltekit()],
-}
+	build: {
+		commonjsOptions: {
+			// Enable better interop for CJS packages expecting default exports
+			requireReturnsDefault: 'auto',
+			transformMixedEsModules: true,
+		},
+	},
+};
 
 export default config;
