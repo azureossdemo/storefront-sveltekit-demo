@@ -1,0 +1,41 @@
+# Single-stage Dockerfile for SvelteKit
+FROM node:18-alpine
+
+# Install pnpm and nginx
+RUN npm install -g pnpm@latest && \
+    apk add --no-cache nginx
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile || pnpm install --force
+
+# Copy source code
+COPY . .
+
+# Generate Houdini files
+RUN pnpm run gen
+
+# Build the application
+RUN pnpm run build
+
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Create nginx user and set permissions
+RUN adduser -D -s /bin/sh nginx && \
+    chown -R nginx:nginx /usr/share/nginx/html
+
+# Copy built files to nginx directory
+RUN cp -r build/* /usr/share/nginx/html/ && \
+    chown -R nginx:nginx /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"] 
